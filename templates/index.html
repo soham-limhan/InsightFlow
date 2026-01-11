@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InsightFlow - Upload Your Data</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+</head>
+
+<body>
+    <div class="container">
+        <div class="hero-section">
+            <div class="logo-container">
+                <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M3 3h18v18H3z" stroke-width="2" />
+                    <path d="M3 9h18M3 15h18M9 3v18M15 3v18" stroke-width="2" />
+                </svg>
+                <h1 class="app-title">InsightFlow</h1>
+            </div>
+            <p class="app-subtitle">Transform your data into actionable insights with AI-powered analysis</p>
+        </div>
+
+        <div class="upload-card glass">
+            <div class="upload-header">
+                <h2>Upload Your Dataset</h2>
+                <p>Support for CSV and Excel files (up to 100MB)</p>
+            </div>
+
+            <div class="upload-zone" id="uploadZone">
+                <input type="file" id="fileInput" accept=".csv,.xlsx,.xls" hidden>
+                <div class="upload-content">
+                    <div class="upload-icon">
+                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                            <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12" stroke-width="2"
+                                stroke-linecap="round" />
+                        </svg>
+                    </div>
+                    <h3>Drag & Drop your file here</h3>
+                    <p class="upload-or">or</p>
+                    <button class="btn-primary" onclick="document.getElementById('fileInput').click()">
+                        Browse Files
+                    </button>
+                    <div class="supported-formats">
+                        <span class="format-badge">CSV</span>
+                        <span class="format-badge">XLSX</span>
+                        <span class="format-badge">XLS</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="upload-progress hidden" id="uploadProgress">
+                <div class="progress-info">
+                    <span id="fileName">Uploading...</span>
+                    <span id="progressPercent">0%</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+            </div>
+
+            <div class="error-message hidden" id="errorMessage"></div>
+        </div>
+
+        <div class="features-grid">
+            <div class="feature-card glass">
+                <div class="feature-icon">📊</div>
+                <h3>Statistical Insights</h3>
+                <p>Comprehensive stats, distributions, and correlations</p>
+            </div>
+            <div class="feature-card glass">
+                <div class="feature-icon">📈</div>
+                <h3>Interactive Charts</h3>
+                <p>Beautiful visualizations with Plotly</p>
+            </div>
+            <div class="feature-card glass">
+                <div class="feature-icon">🔮</div>
+                <h3>Predictions</h3>
+                <p>AI-powered forecasting and trend analysis</p>
+            </div>
+            <div class="feature-card glass">
+                <div class="feature-icon">🧹</div>
+                <h3>Data Cleaning</h3>
+                <p>Automated suggestions and one-click fixes</p>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='js/upload.js') }}"></script>
+</body>
+
+</html>

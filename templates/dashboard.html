@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ filename }} - InsightFlow</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <script src="https://cdn.plot.ly/plotly-2.27.0.min.js"></script>
+</head>
+
+<body>
+    <nav class="navbar glass">
+        <div class="nav-content">
+            <div class="nav-left">
+                <h1 class="nav-title">InsightFlow</h1>
+                <span class="file-badge">{{ filename }}</span>
+            </div>
+            <div class="nav-right">
+                <button class="btn-secondary" onclick="exportData()">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3" stroke-width="2" />
+                    </svg>
+                    Export
+                </button>
+                <button class="btn-secondary" onclick="window.location.href='/'">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M3 12h18M3 6h18M3 18h18" stroke-width="2" />
+                    </svg>
+                    New Analysis
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <div class="dashboard-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar glass">
+            <div class="sidebar-menu">
+                <button class="menu-item active" data-section="overview">
+                    <span class="menu-icon">📋</span>
+                    <span>Overview</span>
+                </button>
+                <button class="menu-item" data-section="insights">
+                    <span class="menu-icon">💡</span>
+                    <span>Insights</span>
+                </button>
+                <button class="menu-item" data-section="visualizations">
+                    <span class="menu-icon">📊</span>
+                    <span>Visualizations</span>
+                </button>
+                <button class="menu-item" data-section="predictions">
+                    <span class="menu-icon">🔮</span>
+                    <span>Predictions</span>
+                </button>
+                <button class="menu-item" data-section="data">
+                    <span class="menu-icon">📁</span>
+                    <span>Data Explorer</span>
+                </button>
+                <button class="menu-item" data-section="cleaning">
+                    <span class="menu-icon">🧹</span>
+                    <span>Data Cleaning</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <div id="loadingScreen" class="loading-screen">
+                <div class="spinner"></div>
+                <p>Analyzing your data...</p>
+            </div>
+
+            <!-- Overview Section -->
+            <section id="overview" class="content-section active">
+                <h2 class="section-title">Dataset Overview</h2>
+
+                <div class="stats-grid">
+                    <div class="stat-card glass">
+                        <div class="stat-icon">📊</div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="totalRows">-</div>
+                            <div class="stat-label">Total Rows</div>
+                        </div>
+                    </div>
+                    <div class="stat-card glass">
+                        <div class="stat-icon">📂</div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="totalColumns">-</div>
+                            <div class="stat-label">Columns</div>
+                        </div>
+                    </div>
+                    <div class="stat-card glass">
+                        <div class="stat-icon">💾</div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="memoryUsage">-</div>
+                            <div class="stat-label">Memory Usage</div>
+                        </div>
+                    </div>
+                    <div class="stat-card glass">
+                        <div class="stat-icon">✨</div>
+                        <div class="stat-content">
+                            <div class="stat-value" id="qualityScore">-</div>
+                            <div class="stat-label">Data Quality</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card glass">
+                    <h3>Column Information</h3>
+                    <div id="columnInfo" class="table-container"></div>
+                </div>
+
+                <div class="card glass">
+                    <h3>Data Quality Issues</h3>
+                    <div id="qualityIssues"></div>
+                </div>
+            </section>
+
+            <!-- Insights Section -->
+            <section id="insights" class="content-section">
+                <h2 class="section-title">Statistical Insights</h2>
+
+                <div class="card glass">
+                    <h3>Numerical Columns Summary</h3>
+                    <div id="numericalSummary"></div>
+                </div>
+
+                <div class="card glass">
+                    <h3>Categorical Columns Summary</h3>
+                    <div id="categoricalSummary"></div>
+                </div>
+
+                <div class="card glass">
+                    <h3>Correlations</h3>
+                    <div id="correlationInsights"></div>
+                </div>
+            </section>
+
+            <!-- Visualizations Section -->
+            <section id="visualizations" class="content-section">
+                <h2 class="section-title">Data Visualizations</h2>
+
+                <div class="viz-tabs">
+                    <button class="tab-btn active" data-tab="distributions">Distributions</button>
+                    <button class="tab-btn" data-tab="correlations">Correlations</button>
+                    <button class="tab-btn" data-tab="categorical">Categorical</button>
+                    <button class="tab-btn" data-tab="timeseries">Time Series</button>
+                </div>
+
+                <div id="distributionsTab" class="tab-content active">
+                    <div id="distributionCharts" class="charts-grid"></div>
+                </div>
+
+                <div id="correlationsTab" class="tab-content">
+                    <div id="correlationChart"></div>
+                    <div id="scatterMatrix"></div>
+                </div>
+
+                <div id="categoricalTab" class="tab-content">
+                    <div id="categoricalCharts" class="charts-grid"></div>
+                </div>
+
+                <div id="timeseriesTab" class="tab-content">
+                    <div id="timeseriesCharts" class="charts-grid"></div>
+                </div>
+            </section>
+
+            <!-- Predictions Section -->
+            <section id="predictions" class="content-section">
+                <h2 class="section-title">Predictive Analytics</h2>
+
+                <div class="card glass">
+                    <h3>Available Predictions</h3>
+                    <div id="predictionRecommendations"></div>
+                </div>
+
+                <div id="predictionResults" class="hidden">
+                    <div class="card glass">
+                        <h3>Prediction Results</h3>
+                        <div id="predictionOutput"></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Data Explorer Section -->
+            <section id="data" class="content-section">
+                <h2 class="section-title">Data Explorer</h2>
+
+                <div class="card glass">
+                    <div class="data-controls">
+                        <input type="text" id="searchInput" placeholder="Search data..." class="search-input">
+                        <select id="sortColumn" class="select-input">
+                            <option value="">Sort by column...</option>
+                        </select>
+                        <select id="sortOrder" class="select-input">
+                            <option value="asc">Ascending</option>
+                            <option value="desc">Descending</option>
+                        </select>
+                    </div>
+
+                    <div id="dataTable" class="table-container"></div>
+
+                    <div class="pagination" id="pagination"></div>
+                </div>
+            </section>
+
+            <!-- Data Cleaning Section -->
+            <section id="cleaning" class="content-section">
+                <h2 clasection-title">Data Cleaning</h2>
+
+                <div class="card glass">
+                    <h3>Suggested Cleaning Actions</h3>
+                    <p class="card-description">AI-powered suggestions to improve your data quality</p>
+                    <div id="cleaningSuggestions"></div>
+                </div>
+
+                <div class="card glass">
+                    <h3>Cleaning History</h3>
+                    <div id="cleaningHistory">
+                        <p class="text-muted">No cleaning actions performed yet</p>
+                    </div>
+                </div>
+            </section>
+        </main>
+    </div>
+
+    <script>
+        const SESSION_ID = '{{ session_id }}';
+    </script>
+    <script src="{{ url_for('static', filename='js/dashboard.js') }}"></script>
+</body>
+
+</html>
