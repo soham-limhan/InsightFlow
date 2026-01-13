@@ -1,6 +1,7 @@
 import plotly.graph_objects as go
 import plotly.express as px
 import plotly.figure_factory as ff
+import plotly.io as pio
 import pandas as pd
 import numpy as np
 from config import Config
@@ -22,7 +23,7 @@ class ChartGenerator:
             # Histogram
             fig = go.Figure()
             fig.add_trace(go.Histogram(
-                x=col_data,
+                x=col_data.tolist(),  # Convert to plain list
                 name=col,
                 nbinsx=30,
                 marker=dict(
@@ -43,13 +44,13 @@ class ChartGenerator:
             charts.append({
                 'column': col,
                 'type': 'histogram',
-                'data': fig.to_json()
+                'data': pio.to_json(fig, validate=False, remove_uids=False, engine='json')
             })
             
             # Box plot
             fig_box = go.Figure()
             fig_box.add_trace(go.Box(
-                y=col_data,
+                y=col_data.tolist(),  # Convert to plain list
                 name=col,
                 marker=dict(color='rgba(139, 92, 246, 0.7)'),
                 boxmean='sd'
@@ -66,7 +67,7 @@ class ChartGenerator:
             charts.append({
                 'column': col,
                 'type': 'boxplot',
-                'data': fig_box.to_json()
+                'data': pio.to_json(fig_box, validate=False, remove_uids=False, engine='json')
             })
         
         return charts
@@ -80,13 +81,14 @@ class ChartGenerator:
         
         corr_matrix = self.df[numeric_cols].corr()
         
+        # Convert to plain lists for JSON serialization
         fig = go.Figure(data=go.Heatmap(
-            z=corr_matrix.values,
-            x=corr_matrix.columns,
-            y=corr_matrix.columns,
+            z=corr_matrix.values.tolist(),  # Convert to plain list
+            x=corr_matrix.columns.tolist(),  # Convert to plain list
+            y=corr_matrix.columns.tolist(),  # Convert to plain list
             colorscale='RdBu',
             zmid=0,
-            text=corr_matrix.values,
+            text=corr_matrix.values.tolist(),  # Convert to plain list
             texttemplate='%{text:.2f}',
             textfont={"size": 10},
             colorbar=dict(title="Correlation")
@@ -99,7 +101,7 @@ class ChartGenerator:
             width=max(Config.DEFAULT_CHART_WIDTH, len(numeric_cols) * 30)
         )
         
-        return fig.to_json()
+        return pio.to_json(fig, validate=False, remove_uids=False, engine='json')
     
     def create_categorical_charts(self):
         """Create bar/pie charts for categorical columns"""
@@ -115,14 +117,14 @@ class ChartGenerator:
                 # Bar chart
                 fig = go.Figure()
                 fig.add_trace(go.Bar(
-                    x=value_counts.index,
-                    y=value_counts.values,
+                    x=value_counts.index.tolist(),  # Convert to plain list
+                    y=value_counts.values.tolist(),  # Convert to plain list
                     marker=dict(
-                        color=value_counts.values,
+                        color=value_counts.values.tolist(),  # Convert to plain list
                         colorscale='Viridis',
                         showscale=True
                     ),
-                    text=value_counts.values,
+                    text=value_counts.values.tolist(),  # Convert to plain list
                     textposition='auto'
                 ))
                 
@@ -137,15 +139,15 @@ class ChartGenerator:
                 charts.append({
                     'column': col,
                     'type': 'bar',
-                    'data': fig.to_json()
+                    'data': pio.to_json(fig, validate=False, remove_uids=False, engine='json')
                 })
                 
                 # Pie chart (only if unique count <= 10)
                 if unique_count <= 10:
                     fig_pie = go.Figure()
                     fig_pie.add_trace(go.Pie(
-                        labels=value_counts.index,
-                        values=value_counts.values,
+                        labels=value_counts.index.tolist(),  # Convert to plain list
+                        values=value_counts.values.tolist(),  # Convert to plain list
                         hole=0.3,
                         marker=dict(colors=px.colors.qualitative.Set3)
                     ))
@@ -159,7 +161,7 @@ class ChartGenerator:
                     charts.append({
                         'column': col,
                         'type': 'pie',
-                        'data': fig_pie.to_json()
+                        'data': pio.to_json(fig_pie, validate=False, remove_uids=False, engine='json')
                     })
         
         return charts
@@ -178,8 +180,8 @@ class ChartGenerator:
             for num_col in numeric_cols:
                 fig = go.Figure()
                 fig.add_trace(go.Scatter(
-                    x=df_sorted[dt_col],
-                    y=df_sorted[num_col],
+                    x=df_sorted[dt_col].tolist(),  # Convert to plain list
+                    y=df_sorted[num_col].tolist(),  # Convert to plain list
                     mode='lines+markers',
                     name=num_col,
                     line=dict(color='rgba(59, 130, 246, 0.8)', width=2),
@@ -199,7 +201,7 @@ class ChartGenerator:
                     'datetime_column': dt_col,
                     'value_column': num_col,
                     'type': 'timeseries',
-                    'data': fig.to_json()
+                    'data': pio.to_json(fig, validate=False, remove_uids=False, engine='json')
                 })
         
         return charts
@@ -225,7 +227,7 @@ class ChartGenerator:
         
         fig.update_traces(diagonal_visible=False, showupperhalf=False)
         
-        return fig.to_json()
+        return pio.to_json(fig, validate=False, remove_uids=False, engine='json')
     
     def create_missing_data_viz(self):
         """Visualize missing data patterns"""
@@ -263,7 +265,7 @@ class ChartGenerator:
             height=max(300, len(cols_with_missing) * 30)
         )
         
-        return fig.to_json()
+        return pio.to_json(fig, validate=False, remove_uids=False, engine='json')
     
     def create_summary_statistics_chart(self):
         """Create visual summary of key statistics"""
@@ -309,4 +311,4 @@ class ChartGenerator:
             height=Config.DEFAULT_CHART_HEIGHT
         )
         
-        return fig.to_json()
+        return pio.to_json(fig, validate=False, remove_uids=False, engine='json')
