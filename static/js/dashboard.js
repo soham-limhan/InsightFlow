@@ -267,7 +267,13 @@ function renderVisualizations(data) {
             chartDiv.id = `dist-${chart.column}-${chart.type}`;
             container.appendChild(chartDiv);
 
-            Plotly.newPlot(chartDiv.id, JSON.parse(chart.data).data, JSON.parse(chart.data).layout);
+            const plotData = JSON.parse(chart.data);
+            const layout = {
+                ...plotData.layout,
+                autosize: true,
+                margin: { l: 50, r: 30, t: 50, b: 50 }
+            };
+            Plotly.newPlot(chartDiv.id, plotData.data, layout, { responsive: true });
         });
     }
 
@@ -279,7 +285,12 @@ function renderVisualizations(data) {
         document.getElementById('correlationChart').appendChild(chartDiv);
 
         const plotData = JSON.parse(data.correlation_heatmap);
-        Plotly.newPlot('correlation-heatmap', plotData.data, plotData.layout);
+        const layout = {
+            ...plotData.layout,
+            autosize: true,
+            margin: { l: 50, r: 30, t: 50, b: 50 }
+        };
+        Plotly.newPlot('correlation-heatmap', plotData.data, layout, { responsive: true });
     }
 
     // Categorical charts
@@ -293,7 +304,13 @@ function renderVisualizations(data) {
             chartDiv.id = `cat-${chart.column}-${chart.type}`;
             container.appendChild(chartDiv);
 
-            Plotly.newPlot(chartDiv.id, JSON.parse(chart.data).data, JSON.parse(chart.data).layout);
+            const plotData = JSON.parse(chart.data);
+            const layout = {
+                ...plotData.layout,
+                autosize: true,
+                margin: { l: 50, r: 30, t: 50, b: 50 }
+            };
+            Plotly.newPlot(chartDiv.id, plotData.data, layout, { responsive: true });
         });
     }
 
@@ -308,7 +325,13 @@ function renderVisualizations(data) {
             chartDiv.id = `ts-${chart.datetime_column}-${chart.value_column}`;
             container.appendChild(chartDiv);
 
-            Plotly.newPlot(chartDiv.id, JSON.parse(chart.data).data, JSON.parse(chart.data).layout);
+            const plotData = JSON.parse(chart.data);
+            const layout = {
+                ...plotData.layout,
+                autosize: true,
+                margin: { l: 50, r: 30, t: 50, b: 50 }
+            };
+            Plotly.newPlot(chartDiv.id, plotData.data, layout, { responsive: true });
         });
     }
 
@@ -320,7 +343,12 @@ function renderVisualizations(data) {
         document.getElementById('scatterMatrix').appendChild(chartDiv);
 
         const plotData = JSON.parse(data.scatter_matrix);
-        Plotly.newPlot('scatter-matrix', plotData.data, plotData.layout);
+        const layout = {
+            ...plotData.layout,
+            autosize: true,
+            margin: { l: 50, r: 30, t: 50, b: 50 }
+        };
+        Plotly.newPlot('scatter-matrix', plotData.data, layout, { responsive: true });
     }
 }
 

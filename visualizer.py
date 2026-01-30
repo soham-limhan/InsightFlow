@@ -38,7 +38,8 @@ class ChartGenerator:
                 yaxis_title='Frequency',
                 template='plotly_dark',
                 height=Config.DEFAULT_CHART_HEIGHT,
-                showlegend=False
+                showlegend=False,
+                autosize=True
             )
             
             charts.append({
@@ -61,7 +62,8 @@ class ChartGenerator:
                 yaxis_title=col,
                 template='plotly_dark',
                 height=Config.DEFAULT_CHART_HEIGHT,
-                showlegend=False
+                showlegend=False,
+                autosize=True
             )
             
             charts.append({
@@ -98,7 +100,8 @@ class ChartGenerator:
             title='Correlation Heatmap',
             template='plotly_dark',
             height=max(Config.DEFAULT_CHART_HEIGHT, len(numeric_cols) * 30),
-            width=max(Config.DEFAULT_CHART_WIDTH, len(numeric_cols) * 30)
+            width=max(Config.DEFAULT_CHART_WIDTH, len(numeric_cols) * 30),
+            autosize=True
         )
         
         return pio.to_json(fig, validate=False, remove_uids=False, engine='json')
@@ -133,7 +136,8 @@ class ChartGenerator:
                     xaxis_title=col,
                     yaxis_title='Count',
                     template='plotly_dark',
-                    height=Config.DEFAULT_CHART_HEIGHT
+                    height=Config.DEFAULT_CHART_HEIGHT,
+                    autosize=True
                 )
                 
                 charts.append({
@@ -155,7 +159,8 @@ class ChartGenerator:
                     fig_pie.update_layout(
                         title=f'Proportion of {col}',
                         template='plotly_dark',
-                        height=Config.DEFAULT_CHART_HEIGHT
+                        height=Config.DEFAULT_CHART_HEIGHT,
+                        autosize=True
                     )
                     
                     charts.append({
@@ -194,7 +199,8 @@ class ChartGenerator:
                     yaxis_title=num_col,
                     template='plotly_dark',
                     height=Config.DEFAULT_CHART_HEIGHT,
-                    hovermode='x unified'
+                    hovermode='x unified',
+                    autosize=True
                 )
                 
                 charts.append({
@@ -308,7 +314,8 @@ class ChartGenerator:
             yaxis_title='Value',
             template='plotly_dark',
             barmode='group',
-            height=Config.DEFAULT_CHART_HEIGHT
+            height=Config.DEFAULT_CHART_HEIGHT,
+            autosize=True
         )
         
         return pio.to_json(fig, validate=False, remove_uids=False, engine='json')

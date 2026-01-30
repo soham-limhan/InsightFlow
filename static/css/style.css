@@ -535,7 +535,7 @@ tr:hover td {
 /* Charts Grid */
 .charts-grid {
     display: grid;
-    grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
     gap: var(--spacing-md);
 }
 
@@ -544,6 +544,26 @@ tr:hover td {
     padding: var(--spacing-md);
     border-radius: var(--radius-md);
     border: 1px solid var(--glass-border);
+    width: 100%;
+    min-height: 400px;
+    position: relative;
+    overflow: hidden;
+}
+
+.chart-container>div {
+    width: 100% !important;
+    height: 100% !important;
+}
+
+/* Specific chart containers */
+#correlationChart,
+#scatterMatrix {
+    width: 100%;
+}
+
+#correlationChart .chart-container,
+#scatterMatrix .chart-container {
+    min-height: 500px;
 }
 
 /* Loading Screen */
