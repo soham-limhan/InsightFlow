@@ -2,6 +2,7 @@
 
 let insightsData = null;
 let visualizationsData = null;
+let predictionsData = [];
 let currentPage = 1;
 let cleaningHistory = [];
 
@@ -372,19 +373,30 @@ async function loadPredictions() {
 // Render prediction recommendations
 function renderPredictionRecommendations(recommendations) {
     if (!recommendations || recommendations.length === 0) {
-        document.getElementById('predictionRecommendations').innerHTML = '<p class="text-muted">No prediction recommendations available</p>';
+        document.getElementById('predictionRecommendations').innerHTML = '<p class="text-muted">No prediction recommendations available for this dataset</p>';
         return;
     }
+
+    // Store recommendations for safe lookup by index
+    predictionsData = recommendations;
+
+    const typeIcons = {
+        time_series_forecast: '📈',
+        regression: '📉',
+        classification: '🏷️',
+        trend: '🔍'
+    };
 
     let html = '<div class="prediction-cards">';
 
     recommendations.forEach((rec, index) => {
+        const icon = typeIcons[rec.type] || '🔮';
         html += `
             <div class="card glass" style="margin-bottom: 1rem;">
-                <h4>${rec.type.replace(/_/g, ' ').toUpperCase()}</h4>
+                <h4>${icon} ${rec.type.replace(/_/g, ' ').toUpperCase()}</h4>
                 <p>${rec.description}</p>
-                <button class="btn-primary" onclick="runPrediction(${index}, ${JSON.stringify(rec).replace(/"/g, '&quot;')})">
-                    Run Prediction
+                <button class="btn-primary" onclick="runPrediction(${index})">
+                    ▶ Run Prediction
                 </button>
             </div>
         `;
@@ -395,12 +407,23 @@ function renderPredictionRecommendations(recommendations) {
 }
 
 // Run a prediction
-async function runPrediction(index, recommendation) {
+async function runPrediction(index) {
+    const recommendation = predictionsData[index];
+    if (!recommendation) {
+        alert('Prediction not found. Please reload the page.');
+        return;
+    }
+
     const payload = {
         session_id: SESSION_ID,
         type: recommendation.type,
         ...recommendation
     };
+
+    // Show loading state
+    const btn = document.querySelector(`#predictionRecommendations .prediction-cards .card:nth-child(${index + 1}) .btn-primary`);
+    const originalText = btn ? btn.textContent : '';
+    if (btn) { btn.textContent = '⏳ Running...'; btn.disabled = true; }
 
     try {
         const response = await fetch('/api/predict', {
@@ -411,24 +434,270 @@ async function runPrediction(index, recommendation) {
 
         const result = await response.json();
 
+        if (btn) { btn.textContent = originalText; btn.disabled = false; }
+
         if (result.error) {
-            alert('Error: ' + result.error);
+            alert('Prediction Error: ' + result.error);
             return;
         }
 
-        displayPredictionResult(result);
+        displayPredictionResult(result, recommendation);
     } catch (error) {
+        if (btn) { btn.textContent = originalText; btn.disabled = false; }
         console.error('Error running prediction:', error);
-        alert('Failed to run prediction');
+        alert('Failed to run prediction. Check the console for details.');
     }
 }
 
-// Display prediction result
-function displayPredictionResult(result) {
-    document.getElementById('predictionResults').classList.remove('hidden');
+// Display prediction result with rich charts and tables
+function displayPredictionResult(result, recommendation) {
+    const container = document.getElementById('predictionResults');
+    const output = document.getElementById('predictionOutput');
+    container.classList.remove('hidden');
+    output.innerHTML = '';
 
-    let html = '<pre>' + JSON.stringify(result, null, 2) + '</pre>';
-    document.getElementById('predictionOutput').innerHTML = html;
+    // Scroll to results
+    container.scrollIntoView({ behavior: 'smooth', block: 'start' });
+
+    const type = recommendation ? recommendation.type : 'unknown';
+
+    if (type === 'time_series_forecast') {
+        renderTimeSeriesResult(result, output);
+    } else if (type === 'regression') {
+        renderRegressionResult(result, output);
+    } else if (type === 'classification') {
+        renderClassificationResult(result, output);
+    } else if (type === 'trend') {
+        renderTrendResult(result, output);
+    } else {
+        // Fallback: styled JSON view
+        output.innerHTML = `<pre style="background: rgba(255,255,255,0.05); padding: 1rem; border-radius: 8px; overflow: auto; font-size: 0.85rem;">${JSON.stringify(result, null, 2)}</pre>`;
+    }
+}
+
+// Render time series forecast chart
+function renderTimeSeriesResult(result, container) {
+    const chartId = 'ts-forecast-chart';
+    container.innerHTML = `
+        <div style="margin-bottom: 1rem;">
+            <p><strong>Trend:</strong> ${result.trend} &nbsp; <strong>R² Score:</strong> ${result.r2_score?.toFixed(4) ?? 'N/A'}</p>
+        </div>
+        <div id="${chartId}" style="width:100%; height:420px;"></div>
+    `;
+
+    const historical = result.historical || [];
+    const forecast = result.forecast || [];
+
+    const histTrace = {
+        x: historical.map(p => p.date),
+        y: historical.map(p => p.value),
+        mode: 'lines+markers',
+        name: 'Historical',
+        line: { color: '#6366f1', width: 2 },
+        marker: { size: 4 }
+    };
+
+    const forecastTrace = {
+        x: forecast.map(p => p.date),
+        y: forecast.map(p => p.value),
+        mode: 'lines',
+        name: 'Forecast',
+        line: { color: '#f59e0b', width: 2, dash: 'dash' }
+    };
+
+    const layout = {
+        paper_bgcolor: 'rgba(0,0,0,0)',
+        plot_bgcolor: 'rgba(0,0,0,0)',
+        font: { color: '#e2e8f0' },
+        xaxis: { title: 'Date', gridcolor: 'rgba(255,255,255,0.1)' },
+        yaxis: { title: 'Value', gridcolor: 'rgba(255,255,255,0.1)' },
+        legend: { orientation: 'h', y: -0.2 },
+        margin: { l: 60, r: 40, t: 30, b: 60 },
+        shapes: [{
+            type: 'line',
+            x0: historical.length > 0 ? historical[historical.length - 1].date : 0,
+            x1: historical.length > 0 ? historical[historical.length - 1].date : 0,
+            y0: 0, y1: 1, yref: 'paper',
+            line: { color: '#64748b', dash: 'dot', width: 1 }
+        }]
+    };
+
+    Plotly.newPlot(chartId, [histTrace, forecastTrace], layout, { responsive: true });
+}
+
+// Render regression result: metrics table + feature importance chart
+function renderRegressionResult(result, container) {
+    const chartId = 'reg-importance-chart';
+    const lr = result.linear_regression || {};
+    const rf = result.random_forest || {};
+    const best = result.best_model || 'N/A';
+
+    let predTableHTML = '';
+    if (result.sample_predictions && result.sample_predictions.length > 0) {
+        predTableHTML = `
+            <h4 style="margin-top:1.5rem;">Sample Predictions (${best})</h4>
+            <div class="table-container">
+            <table>
+                <thead><tr><th>#</th><th>Actual</th><th>Predicted</th><th>Error</th></tr></thead>
+                <tbody>
+                ${result.sample_predictions.map((p, i) => `
+                    <tr>
+                        <td>${i + 1}</td>
+                        <td>${p.actual.toFixed(2)}</td>
+                        <td>${p.predicted.toFixed(2)}</td>
+                        <td style="color:${Math.abs(p.actual - p.predicted) / (Math.abs(p.actual) || 1) < 0.1 ? 'var(--success)' : 'var(--warning)'}">
+                            ${((p.predicted - p.actual) / (Math.abs(p.actual) || 1) * 100).toFixed(1)}%
+                        </td>
+                    </tr>
+                `).join('')}
+                </tbody>
+            </table>
+            </div>
+        `;
+    }
+
+    container.innerHTML = `
+        <h4>📊 Model Comparison — Target: <em>${result.target}</em></h4>
+        <div class="table-container">
+        <table>
+            <thead><tr><th>Model</th><th>R² Score</th><th>RMSE</th><th>Winner?</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td>Linear Regression</td>
+                    <td>${lr.r2_score?.toFixed(4) ?? 'N/A'}</td>
+                    <td>${lr.rmse?.toFixed(2) ?? 'N/A'}</td>
+                    <td>${best === 'Linear Regression' ? '🏆' : ''}</td>
+                </tr>
+                <tr>
+                    <td>Random Forest</td>
+                    <td>${rf.r2_score?.toFixed(4) ?? 'N/A'}</td>
+                    <td>${rf.rmse?.toFixed(2) ?? 'N/A'}</td>
+                    <td>${best === 'Random Forest' ? '🏆' : ''}</td>
+                </tr>
+            </tbody>
+        </table>
+        </div>
+        <div id="${chartId}" style="width:100%; height:280px; margin-top:1rem;"></div>
+        ${predTableHTML}
+    `;
+
+    // Feature importance chart
+    const importance = rf.feature_importance || [];
+    if (importance.length > 0) {
+        Plotly.newPlot(chartId, [{
+            type: 'bar', orientation: 'h',
+            x: importance.map(f => f.importance),
+            y: importance.map(f => f.feature),
+            marker: { color: '#6366f1' },
+            name: 'Feature Importance'
+        }], {
+            paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+            font: { color: '#e2e8f0' },
+            title: { text: 'Feature Importance (Random Forest)', font: { color: '#e2e8f0' } },
+            xaxis: { title: 'Importance', gridcolor: 'rgba(255,255,255,0.1)' },
+            yaxis: { gridcolor: 'rgba(255,255,255,0.1)' },
+            margin: { l: 140, r: 40, t: 50, b: 50 }
+        }, { responsive: true });
+    }
+}
+
+// Render classification result: metrics table + feature importance chart
+function renderClassificationResult(result, container) {
+    const chartId = 'cls-importance-chart';
+    const lr = result.logistic_regression || {};
+    const rf = result.random_forest || {};
+    const best = result.best_model || 'N/A';
+    const classes = (result.classes || []).join(', ');
+
+    container.innerHTML = `
+        <h4>🏷️ Classification — Target: <em>${result.target}</em></h4>
+        <p><strong>Classes:</strong> ${classes}</p>
+        <div class="table-container">
+        <table>
+            <thead><tr><th>Model</th><th>Accuracy</th><th>Winner?</th></tr></thead>
+            <tbody>
+                <tr>
+                    <td>Logistic Regression</td>
+                    <td>${lr.accuracy !== undefined ? (lr.accuracy * 100).toFixed(1) + '%' : 'N/A'}</td>
+                    <td>${best === 'Logistic Regression' ? '🏆' : ''}</td>
+                </tr>
+                <tr>
+                    <td>Random Forest</td>
+                    <td>${rf.accuracy !== undefined ? (rf.accuracy * 100).toFixed(1) + '%' : 'N/A'}</td>
+                    <td>${best === 'Random Forest' ? '🏆' : ''}</td>
+                </tr>
+            </tbody>
+        </table>
+        </div>
+        <div id="${chartId}" style="width:100%; height:280px; margin-top:1rem;"></div>
+    `;
+
+    const importance = rf.feature_importance || [];
+    if (importance.length > 0) {
+        Plotly.newPlot(chartId, [{
+            type: 'bar', orientation: 'h',
+            x: importance.map(f => f.importance),
+            y: importance.map(f => f.feature),
+            marker: { color: '#10b981' },
+            name: 'Feature Importance'
+        }], {
+            paper_bgcolor: 'rgba(0,0,0,0)', plot_bgcolor: 'rgba(0,0,0,0)',
+            font: { color: '#e2e8f0' },
+            title: { text: 'Feature Importance (Random Forest)', font: { color: '#e2e8f0' } },
+            xaxis: { title: 'Importance', gridcolor: 'rgba(255,255,255,0.1)' },
+            yaxis: { gridcolor: 'rgba(255,255,255,0.1)' },
+            margin: { l: 160, r: 40, t: 50, b: 50 }
+        }, { responsive: true });
+    }
+}
+
+// Render trend analysis result as a styled metrics card
+function renderTrendResult(result, container) {
+    const directionEmoji = result.trend_direction === 'upward' ? '📈' : '📉';
+    const changeColor = result.change_from_mean > 0 ? 'var(--success)' : 'var(--error)';
+    container.innerHTML = `
+        <h4>${directionEmoji} Trend Analysis — Column: <em>${result.column}</em></h4>
+        <div class="stats-grid" style="margin-top: 1rem;">
+            <div class="stat-card glass">
+                <div class="stat-icon">${directionEmoji}</div>
+                <div class="stat-content">
+                    <div class="stat-value">${result.trend_direction?.toUpperCase()}</div>
+                    <div class="stat-label">Trend Direction</div>
+                </div>
+            </div>
+            <div class="stat-card glass">
+                <div class="stat-icon">📐</div>
+                <div class="stat-content">
+                    <div class="stat-value">${result.trend_slope?.toFixed(4)}</div>
+                    <div class="stat-label">Slope (per row)</div>
+                </div>
+            </div>
+            <div class="stat-card glass">
+                <div class="stat-icon">〰️</div>
+                <div class="stat-content">
+                    <div class="stat-value">${result.volatility?.toFixed(2)}</div>
+                    <div class="stat-label">Volatility (Std Dev)</div>
+                </div>
+            </div>
+            <div class="stat-card glass">
+                <div class="stat-icon">🎯</div>
+                <div class="stat-content">
+                    <div class="stat-value" style="color:${changeColor}">${result.change_from_mean?.toFixed(2)}</div>
+                    <div class="stat-label">Current vs Mean</div>
+                </div>
+            </div>
+        </div>
+        <div class="table-container" style="margin-top: 1.5rem;">
+        <table>
+            <thead><tr><th>Metric</th><th>Value</th></tr></thead>
+            <tbody>
+                <tr><td>Mean</td><td>${result.mean?.toFixed(4)}</td></tr>
+                <tr><td>Median</td><td>${result.median?.toFixed(4)}</td></tr>
+                <tr><td>Current Value</td><td>${result.current_value?.toFixed(4)}</td></tr>
+            </tbody>
+        </table>
+        </div>
+    `;
 }
 
 // Initialize data explorer

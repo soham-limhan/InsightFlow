@@ -36,8 +36,15 @@ class PredictionEngine:
     
     def time_series_forecast(self, date_column, value_column, periods=30):
         """Forecast future values for time series data"""
-        if date_column not in self.datetime_cols or value_column not in self.numeric_cols:
+        # Check if date_column is datetime (either pre-detected or a datetime dtype column)
+        if date_column not in self.df.columns or value_column not in self.numeric_cols:
             return None
+        if not (date_column in self.datetime_cols or pd.api.types.is_datetime64_any_dtype(self.df[date_column])):
+            # Try to parse it as datetime on the fly
+            try:
+                self.df[date_column] = pd.to_datetime(self.df[date_column])
+            except Exception:
+                return {'error': f'Column "{date_column}" cannot be parsed as datetime'}
         
         try:
             # Prepare data
@@ -271,12 +278,16 @@ class PredictionEngine:
         recommendations = []
         
         # Check for time series potential
-        if len(self.datetime_cols) > 0 and len(self.numeric_cols) > 0:
-            for dt_col in self.datetime_cols:
+        datetime_cols = self.datetime_cols + [
+            col for col in self.df.columns
+            if col not in self.datetime_cols and pd.api.types.is_datetime64_any_dtype(self.df[col])
+        ]
+        if len(datetime_cols) > 0 and len(self.numeric_cols) > 0:
+            for dt_col in datetime_cols:
                 for num_col in self.numeric_cols:
                     recommendations.append({
                         'type': 'time_series_forecast',
-                        'description': f'Forecast {num_col} over time',
+                        'description': f'Forecast {num_col} over time using {dt_col}',
                         'date_column': dt_col,
                         'value_column': num_col
                     })
@@ -288,9 +299,22 @@ class PredictionEngine:
                 if len(features) > 0:
                     recommendations.append({
                         'type': 'regression',
-                        'description': f'Predict {target} using {len(features)} features',
+                        'description': f'Predict {target} using {len(features)} numeric features',
                         'target': target,
                         'features': features[:5]  # Top 5 features
                     })
         
-        return recommendations[:5]  # Return top 5 recommendations
+        # Check for classification potential (categorical target columns)
+        categorical_cols = self.df.select_dtypes(include=['object', 'category']).columns.tolist()
+        if len(self.numeric_cols) >= 1:
+            for cat_col in categorical_cols:
+                unique_count = self.df[cat_col].nunique()
+                if 2 <= unique_count <= 20:  # Reasonable number of classes
+                    recommendations.append({
+                        'type': 'classification',
+                        'description': f'Classify {cat_col} using {len(self.numeric_cols)} numeric features',
+                        'target': cat_col,
+                        'features': self.numeric_cols[:5]
+                    })
+        
+        return recommendations[:8]  # Return top 8 recommendations
