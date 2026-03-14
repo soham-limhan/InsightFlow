@@ -8,6 +8,7 @@ from data_processor import DataAnalyzer
 from visualizer import ChartGenerator
 from predictor import PredictionEngine
 from data_cleaner import DataCleaner
+from spreadsheet_manager import spreadsheet_manager
 import json
 
 app = Flask(__name__)
@@ -331,6 +332,40 @@ def export_data(session_id):
         
         return send_file(export_path, as_attachment=True, download_name=export_filename)
         
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/spreadsheet/<session_id>')
+def spreadsheet_view(session_id):
+    """Display excel-like spreadsheet interface"""
+    session = session_manager.get_session(session_id)
+    if not session:
+        return redirect(url_for('index'))
+    
+    return render_template('spreadsheet.html', 
+                         session_id=session_id, 
+                         filename=session['filename'])
+
+@app.route('/api/spreadsheet/data/<session_id>')
+def get_spreadsheet_data(session_id):
+    """Get data for spreadsheet"""
+    data = spreadsheet_manager.get_spreadsheet_data(session_id)
+    if not data:
+        return jsonify({'error': 'Session not found'}), 404
+    return jsonify(data)
+
+@app.route('/api/spreadsheet/update', methods=['POST'])
+def update_cell():
+    """Update a specific cell"""
+    try:
+        data = request.json
+        session_id = data.get('session_id')
+        row_idx = int(data.get('row_idx'))
+        column = data.get('column')
+        value = data.get('value')
+        
+        success, message = spreadsheet_manager.update_cell(session_id, row_idx, column, value)
+        return jsonify({'success': success, 'message': message})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

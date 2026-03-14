@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>InsightFlow - Spreadsheet Editor</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/spreadsheet.css') }}">
+</head>
+<body>
+    <div class="spreadsheet-container">
+        <div class="spreadsheet-header">
+            <div class="header-left">
+                <a href="{{ url_for('dashboard', session_id=session_id) }}" class="btn-back">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                        <path d="M19 12H5M12 19l-7-7 7-7" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                    Back to Dashboard
+                </a>
+                <h1>Spreadsheet Editor</h1>
+                <p class="filename">{{ filename }}</p>
+            </div>
+            <div class="spreadsheet-controls">
+                <button class="btn-primary" id="exportBtn">Export Data</button>
+            </div>
+        </div>
+
+        <div class="spreadsheet-wrapper" id="spreadsheetWrapper">
+            <div id="loadingOverlay" class="loading-overlay">
+                <div class="loader"></div>
+                <p>Loading spreadsheet data...</p>
+            </div>
+            <table class="spreadsheet" id="spreadsheetTable">
+                <thead id="spreadsheetHead"></thead>
+                <tbody id="spreadsheetBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="status-indicator" id="statusIndicator">
+        <div class="status-dot" id="statusDot"></div>
+        <span id="statusText">Ready</span>
+    </div>
+
+    <script>
+        window.sessionId = "{{ session_id }}";
+    </script>
+    <script src="{{ url_for('static', filename='js/spreadsheet.js') }}"></script>
+</body>
+</html>
