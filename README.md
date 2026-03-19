@@ -83,6 +83,7 @@ http://127.0.0.1:5000
 6. **Explore Data**: Use the interactive table with search, sort, and filter
 7. **Clean Data**: Apply automated cleaning suggestions
 8. **Export Results**: Download cleaned data
+9. **Spreadsheet**:Added Spreadsheet Capablities
 
 ## Project Structure
 
