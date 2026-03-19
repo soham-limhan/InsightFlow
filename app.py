@@ -5,11 +5,24 @@ import pandas as pd
 from config import Config
 from session_manager import session_manager
 from data_processor import DataAnalyzer
-from visualizer import ChartGenerator
-from predictor import PredictionEngine
-from data_cleaner import DataCleaner
 from spreadsheet_manager import spreadsheet_manager
 import json
+
+# Lazy imports for heavy ML dependencies (may not be available on Vercel)
+try:
+    from visualizer import ChartGenerator
+except ImportError:
+    ChartGenerator = None
+
+try:
+    from predictor import PredictionEngine
+except ImportError:
+    PredictionEngine = None
+
+try:
+    from data_cleaner import DataCleaner
+except ImportError:
+    DataCleaner = None
 
 app = Flask(__name__)
 app.config.from_object(Config)

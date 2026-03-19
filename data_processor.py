@@ -1,6 +1,9 @@
 import pandas as pd
 import numpy as np
-from scipy import stats
+try:
+    from scipy import stats
+except ImportError:
+    stats = None
 from config import Config
 
 class DataAnalyzer:
