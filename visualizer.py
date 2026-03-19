@@ -39,8 +39,11 @@ class ChartGenerator:
                 template='plotly_dark',
                 height=Config.DEFAULT_CHART_HEIGHT,
                 showlegend=False,
-                autosize=True
+                autosize=True,
+                margin=dict(l=40, r=40, t=50, b=50)
             )
+            fig.update_xaxes(automargin=True)
+            fig.update_yaxes(automargin=True)
             
             charts.append({
                 'column': col,
@@ -63,8 +66,10 @@ class ChartGenerator:
                 template='plotly_dark',
                 height=Config.DEFAULT_CHART_HEIGHT,
                 showlegend=False,
-                autosize=True
+                autosize=True,
+                margin=dict(l=40, r=40, t=50, b=50)
             )
+            fig_box.update_yaxes(automargin=True)
             
             charts.append({
                 'column': col,
@@ -137,8 +142,11 @@ class ChartGenerator:
                     yaxis_title='Count',
                     template='plotly_dark',
                     height=Config.DEFAULT_CHART_HEIGHT,
-                    autosize=True
+                    autosize=True,
+                    margin=dict(l=40, r=40, t=50, b=50)
                 )
+                fig.update_xaxes(automargin=True)
+                fig.update_yaxes(automargin=True)
                 
                 charts.append({
                     'column': col,
@@ -160,7 +168,8 @@ class ChartGenerator:
                         title=f'Proportion of {col}',
                         template='plotly_dark',
                         height=Config.DEFAULT_CHART_HEIGHT,
-                        autosize=True
+                        autosize=True,
+                        margin=dict(l=40, r=40, t=50, b=50)
                     )
                     
                     charts.append({
@@ -200,8 +209,11 @@ class ChartGenerator:
                     template='plotly_dark',
                     height=Config.DEFAULT_CHART_HEIGHT,
                     hovermode='x unified',
-                    autosize=True
+                    autosize=True,
+                    margin=dict(l=40, r=40, t=50, b=50)
                 )
+                fig.update_xaxes(automargin=True)
+                fig.update_yaxes(automargin=True)
                 
                 charts.append({
                     'datetime_column': dt_col,
@@ -315,7 +327,10 @@ class ChartGenerator:
             template='plotly_dark',
             barmode='group',
             height=Config.DEFAULT_CHART_HEIGHT,
-            autosize=True
+            autosize=True,
+            margin=dict(l=40, r=40, t=50, b=50)
         )
+        fig.update_xaxes(automargin=True)
+        fig.update_yaxes(automargin=True)
         
         return pio.to_json(fig, validate=False, remove_uids=False, engine='json')

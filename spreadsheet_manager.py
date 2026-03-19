@@ -43,6 +43,30 @@ class SpreadsheetManager:
             return False, str(e)
 
     @staticmethod
+    def save_to_file(session_id):
+        """Persist the current session dataframe back to the original file on disk"""
+        session = session_manager.get_session(session_id)
+        if not session:
+            return False, "Session not found"
+
+        try:
+            df = session['dataframe']
+            filepath = session['filepath']
+            ext = os.path.splitext(filepath)[1].lower()
+
+            if ext == '.csv':
+                df.to_csv(filepath, index=False)
+            elif ext in ('.xlsx', '.xls'):
+                df.to_excel(filepath, index=False, engine='openpyxl')
+            else:
+                return False, f"Unsupported file format: {ext}"
+
+            return True, "File saved successfully"
+
+        except Exception as e:
+            return False, str(e)
+
+    @staticmethod
     def get_spreadsheet_data(session_id):
         """Get all data for spreadsheet view with row indices"""
         session = session_manager.get_session(session_id)

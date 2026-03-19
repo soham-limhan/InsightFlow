@@ -97,7 +97,7 @@ document.addEventListener('DOMContentLoaded', function() {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     session_id: sessionId,
-                    row_idx: row_idx,
+                    row_idx: rowIdx,
                     column: column,
                     value: value
                 })
@@ -127,8 +127,41 @@ document.addEventListener('DOMContentLoaded', function() {
         statusIndicator.classList.remove('visible');
     }
 
-    document.getElementById('exportBtn').addEventListener('click', function() {
-        window.location.href = `/export/${sessionId}`;
+    // Save button — persist all changes to the original file on disk
+    document.getElementById('saveBtn').addEventListener('click', async function() {
+        const btn = this;
+        btn.disabled = true;
+        btn.classList.add('saving');
+        statusText.textContent = 'Saving to file...';
+        statusDot.className = 'status-dot saving';
+        showStatus();
+
+        try {
+            const response = await fetch(`/api/spreadsheet/save/${sessionId}`, {
+                method: 'POST'
+            });
+            const result = await response.json();
+
+            if (result.success) {
+                statusText.textContent = 'File saved successfully!';
+                statusDot.className = 'status-dot success';
+                setTimeout(hideStatus, 3000);
+            } else {
+                throw new Error(result.message || 'Save failed');
+            }
+        } catch (error) {
+            console.error('Save failed:', error);
+            statusText.textContent = 'Save failed: ' + error.message;
+            statusDot.className = 'status-dot error';
+        } finally {
+            btn.disabled = false;
+            btn.classList.remove('saving');
+        }
+    });
+
+    // Download button — download the current data as a file
+    document.getElementById('downloadBtn').addEventListener('click', function() {
+        window.location.href = `/api/spreadsheet/download/${sessionId}`;
     });
 
     loadData();

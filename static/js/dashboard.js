@@ -272,7 +272,9 @@ function renderVisualizations(data) {
             const layout = {
                 ...plotData.layout,
                 autosize: true,
-                margin: { l: 50, r: 30, t: 50, b: 50 }
+                margin: { l: 60, r: 60, t: 70, b: 70 },
+                xaxis: { ...plotData.layout.xaxis, automargin: true },
+                yaxis: { ...plotData.layout.yaxis, automargin: true }
             };
             Plotly.newPlot(chartDiv.id, plotData.data, layout, { responsive: true });
         });
@@ -289,7 +291,9 @@ function renderVisualizations(data) {
         const layout = {
             ...plotData.layout,
             autosize: true,
-            margin: { l: 50, r: 30, t: 50, b: 50 }
+            margin: { l: 60, r: 60, t: 70, b: 70 },
+            xaxis: { ...plotData.layout.xaxis, automargin: true },
+            yaxis: { ...plotData.layout.yaxis, automargin: true }
         };
         Plotly.newPlot('correlation-heatmap', plotData.data, layout, { responsive: true });
     }
@@ -309,7 +313,9 @@ function renderVisualizations(data) {
             const layout = {
                 ...plotData.layout,
                 autosize: true,
-                margin: { l: 50, r: 30, t: 50, b: 50 }
+                margin: { l: 60, r: 60, t: 70, b: 70 },
+                xaxis: { ...plotData.layout.xaxis, automargin: true },
+                yaxis: { ...plotData.layout.yaxis, automargin: true }
             };
             Plotly.newPlot(chartDiv.id, plotData.data, layout, { responsive: true });
         });
@@ -330,7 +336,9 @@ function renderVisualizations(data) {
             const layout = {
                 ...plotData.layout,
                 autosize: true,
-                margin: { l: 50, r: 30, t: 50, b: 50 }
+                margin: { l: 60, r: 60, t: 70, b: 70 },
+                xaxis: { ...plotData.layout.xaxis, automargin: true },
+                yaxis: { ...plotData.layout.yaxis, automargin: true }
             };
             Plotly.newPlot(chartDiv.id, plotData.data, layout, { responsive: true });
         });
@@ -347,7 +355,9 @@ function renderVisualizations(data) {
         const layout = {
             ...plotData.layout,
             autosize: true,
-            margin: { l: 50, r: 30, t: 50, b: 50 }
+            margin: { l: 60, r: 60, t: 70, b: 70 },
+            xaxis: { ...plotData.layout.xaxis, automargin: true },
+            yaxis: { ...plotData.layout.yaxis, automargin: true }
         };
         Plotly.newPlot('scatter-matrix', plotData.data, layout, { responsive: true });
     }

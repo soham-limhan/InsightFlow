@@ -541,13 +541,16 @@ tr:hover td {
 
 .chart-container {
     background: var(--glass-bg);
-    padding: var(--spacing-md);
+    padding: var(--spacing-sm);
     border-radius: var(--radius-md);
     border: 1px solid var(--glass-border);
     width: 100%;
     min-height: 400px;
     position: relative;
     overflow: hidden;
+    display: flex;
+    justify-content: center;
+    align-items: center;
 }
 
 .chart-container>div {

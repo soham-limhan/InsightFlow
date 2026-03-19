@@ -309,6 +309,8 @@ def apply_cleaning():
             session_manager.update_session(session_id, 'dataframe', cleaner.get_cleaned_dataframe())
             # Clear cache since data changed
             session['cache'] = {}
+            # Persist changes to the original file on disk
+            spreadsheet_manager.save_to_file(session_id)
             
         return jsonify({'success': success, 'message': message})
         
@@ -366,6 +368,51 @@ def update_cell():
         
         success, message = spreadsheet_manager.update_cell(session_id, row_idx, column, value)
         return jsonify({'success': success, 'message': message})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/spreadsheet/save/<session_id>', methods=['POST'])
+def save_spreadsheet(session_id):
+    """Save the current spreadsheet data back to the original file"""
+    try:
+        success, message = spreadsheet_manager.save_to_file(session_id)
+        if success:
+            return jsonify({'success': True, 'message': message})
+        else:
+            return jsonify({'success': False, 'message': message}), 400
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@app.route('/api/spreadsheet/download/<session_id>')
+def download_spreadsheet(session_id):
+    """Download the current spreadsheet data as a file"""
+    try:
+        session = session_manager.get_session(session_id)
+        if not session:
+            return jsonify({'error': 'Session not found'}), 404
+
+        df = session['dataframe']
+        original_filename = session['filename']
+        requested_format = request.args.get('format', '').lower()
+
+        # Determine output format
+        original_ext = os.path.splitext(original_filename)[1].lower()
+        if requested_format in ('csv', 'xlsx'):
+            out_ext = '.' + requested_format
+        else:
+            out_ext = original_ext if original_ext else '.csv'
+
+        # Build download filename
+        base_name = os.path.splitext(original_filename)[0]
+        download_name = f"{base_name}{out_ext}"
+        export_path = os.path.join(Config.UPLOAD_FOLDER, f"download_{download_name}")
+
+        if out_ext == '.csv':
+            df.to_csv(export_path, index=False)
+        else:
+            df.to_excel(export_path, index=False, engine='openpyxl')
+
+        return send_file(export_path, as_attachment=True, download_name=download_name)
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
