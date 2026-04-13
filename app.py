@@ -7,6 +7,7 @@ from session_manager import session_manager
 from data_processor import DataAnalyzer
 from spreadsheet_manager import spreadsheet_manager
 import json
+import requests
 
 # Lazy imports for heavy ML dependencies (may not be available on Vercel)
 try:
@@ -435,6 +436,88 @@ def cleanup_session(session_id):
     try:
         session_manager.delete_session(session_id)
         return jsonify({'success': True})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+def get_data_summary(df):
+    """Generate a summary of the dataframe for LLM context"""
+    try:
+        summary = {
+            "columns": df.columns.tolist(),
+            "data_types": df.dtypes.astype(str).to_dict(),
+            "shape": df.shape,
+            "missing_values": df.isnull().sum().to_dict(),
+            "statistics": df.describe(include='all').to_dict(),
+            "sample_data": df.head(5).to_dict(orient='records')
+        }
+        return json.dumps(summary, default=str)
+    except Exception as e:
+        return f"Error gathering summary: {str(e)}"
+
+@app.route('/api/ai_analyze/<session_id>', methods=['POST'])
+def ai_analyze(session_id):
+    """Analyze data using the custom Ollama model"""
+    try:
+        data = request.json
+        prompt = data.get('prompt')
+        
+        session = session_manager.get_session(session_id)
+        if not session:
+            return jsonify({'error': 'Session not found'}), 404
+        
+        df = session['dataframe']
+        data_context = get_data_summary(df)
+        
+        # Prepare the prompt for Ollama
+        full_prompt = f"""
+Dataset Context:
+{data_context}
+
+User Question: {prompt}
+
+Analysis Requirements:
+- Use the provided context to answer the user's question accurately.
+- If the analysis can be enhanced with a visualization, include 1-2 chart definitions in the "visualizations" array.
+- Return your response strictly in the following JSON format:
+
+{{
+  "answers": ["string"],
+  "insights": ["string"],
+  "recommendations": ["string"],
+  "visualizations": [
+    {{
+      "type": "bar|line|pie|scatter",
+      "labels": ["string"],
+      "values": [number],
+      "title": "string"
+    }}
+  ]
+}}
+"""
+
+        # Call local Ollama API
+        response = requests.post(
+            'http://localhost:11434/api/generate',
+            json={
+                'model': 'llama3.1',
+                'prompt': full_prompt,
+                'stream': False
+            },
+            timeout=60
+        )
+        
+        if response.status_code != 200:
+            return jsonify({'error': f'Ollama error: {response.text}'}), 500
+            
+        result = response.json()
+        ai_response = result.get('response', '')
+        
+        # Try to parse as JSON if the model followed instructions
+        try:
+            return jsonify({'response': json.loads(ai_response)})
+        except:
+            return jsonify({'response': ai_response})
+            
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 

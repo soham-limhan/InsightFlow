@@ -61,6 +61,10 @@
                     <span class="menu-icon">🧹</span>
                     <span>Data Cleaner</span>
                 </button>
+                <button class="menu-item" data-section="ai-analyst">
+                    <span class="menu-icon">🤖</span>
+                    <span>AI Data Analyst</span>
+                </button>
                 <button class="menu-item" onclick="window.location.href='/spreadsheet/{{ session_id }}'">
                     <span class="menu-icon">🖩</span>
                     <span>Spreadsheet Editor</span>
@@ -223,6 +227,31 @@
                     <h3>Cleaning History</h3>
                     <div id="cleaningHistory">
                         <p class="text-muted">No cleaning actions performed yet</p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- AI Data Analyst Section -->
+            <section id="ai-analyst" class="content-section">
+                <h2 class="section-title">🤖 AI Data Analyst</h2>
+                
+                <div class="ai-chat-container glass">
+                    <div id="chatHistory" class="chat-history">
+                        <div class="chat-message ai">
+                            <div class="message-content">
+                                Hello! I'm your AI Data Analyst. Ask me anything about your dataset!
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="chat-input-container">
+                        <textarea id="aiPrompt" placeholder="Ask a question about your data..." rows="2"></textarea>
+                        <button id="sendAiBtn" class="btn-primary">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                                <path d="M22 2L11 13M22 2l-7 20-4-9-9-4 20-7z" stroke-width="2" />
+                            </svg>
+                            <span>Analyze</span>
+                        </button>
                     </div>
                 </div>
             </section>

@@ -30,6 +30,13 @@ A comprehensive web-based data analysis application that transforms CSV/Excel fi
 - Trend analysis & detection
 - Feature importance ranking
 
+### 🤖 AI Data Analyst
+- Dedicated conversational interface for deep data exploration
+- Context-aware analysis using **llama3.1**
+- **Dynamic Chart Generation**: AI creates interactive Plotly charts in response to queries
+- Insightful data storytelling (Analysis, Insights, Recommendations)
+- Support for complex multi-column queries
+
 ### 🧹 Data Cleaning
 - Automated cleaning suggestions
 - Missing value handling (multiple strategies)
@@ -44,18 +51,21 @@ A comprehensive web-based data analysis application that transforms CSV/Excel fi
 - Drag-and-drop file upload
 - Interactive data explorer
 - Real-time updates
+- Dedicated full-page AI Analyst workspace
 
 ## Installation
 
 ### Prerequisites
 - Python 3.8 or higher
 - pip package manager
+- **Ollama** (for AI features)
+- **llama3.1** model (pulled via `ollama pull llama3.1`)
 
 ### Setup
 
 1. Clone or navigate to the project directory:
 ```powershell
-cd "c:\ProjectDevEnv\Data Cleaner"
+cd "c:\ProjectDevEnv\InsightFlow"
 ```
 
 2. Install dependencies:
@@ -88,7 +98,7 @@ http://127.0.0.1:5000
 ## Project Structure
 
 ```
-c:\ProjectDevEnv\Data Cleaner\
+c:\ProjectDevEnv\InsightFlow\
 ├── app.py                    # Flask application (main)
 ├── config.py                 # Configuration settings
 ├── session_manager.py        # Session lifecycle management
@@ -100,13 +110,13 @@ c:\ProjectDevEnv\Data Cleaner\
 ├── sample_data.csv           # Sample dataset for testing
 ├── templates/
 │   ├── index.html            # Landing page
-│   └── dashboard.html        # Main dashboard
+│   └── dashboard.html        # Main dashboard with AI tab
 └── static/
     ├── css/
-    │   └── style.css         # Design system
+    │   └── style.css         # Design system & chat styles
     └── js/
         ├── upload.js         # Upload logic
-        └── dashboard.js      # Dashboard interactivity
+        └── dashboard.js      # Dashboard & AI chat logic
 ```
 
 ## Technologies
@@ -116,8 +126,8 @@ c:\ProjectDevEnv\Data Cleaner\
 - **Pandas**: Data manipulation
 - **NumPy**: Numerical computing
 - **Scikit-learn**: Machine learning
-- **Statsmodels**: Statistical models
 - **Plotly**: Interactive visualizations
+- **Ollama (llama3.1)**: Local AI analysis & chart generation
 
 ### Frontend
 - **HTML5**: Structure
@@ -169,6 +179,7 @@ The `DataCleaner` provides smart suggestions:
 - `GET /api/cleaning/suggestions/<session_id>` - Cleaning suggestions
 - `POST /api/cleaning/apply` - Apply cleaning operations
 - `GET /export/<session_id>` - Export cleaned data
+- `POST /api/ai_analyze/<session_id>` - Conversational AI analysis & chart generation
 
 ## Configuration
 

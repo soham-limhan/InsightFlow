@@ -931,3 +931,203 @@ function debounce(func, wait) {
         timeout = setTimeout(later, wait);
     };
 }
+
+// AI Data Analyst Logic
+document.addEventListener('DOMContentLoaded', () => {
+    const aiPrompt = document.getElementById('aiPrompt');
+    const sendAiBtn = document.getElementById('sendAiBtn');
+
+    if (sendAiBtn) {
+        sendAiBtn.addEventListener('click', sendAiPrompt);
+    }
+
+    if (aiPrompt) {
+        aiPrompt.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendAiPrompt();
+            }
+        });
+    }
+});
+
+async function sendAiPrompt() {
+    const promptInput = document.getElementById('aiPrompt');
+    const chatHistory = document.getElementById('chatHistory');
+    const prompt = promptInput.value.trim();
+
+    if (!prompt) return;
+
+    // Clear input
+    promptInput.value = '';
+    promptInput.style.height = 'auto';
+
+    // Add user message to UI
+    appendMessage('user', prompt);
+
+    // Add loading message
+    const loadingId = 'ai-loading-' + Date.now();
+    const loadingMsg = appendMessage('ai', 'Thinking...', loadingId);
+
+    try {
+        const response = await fetch(`/api/ai_analyze/${SESSION_ID}`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ prompt })
+        });
+
+        const data = await response.json();
+
+        // Remove loading
+        document.getElementById(loadingId).remove();
+
+        if (data.error) {
+            appendMessage('ai', 'Error: ' + data.error);
+            return;
+        }
+
+        renderAiResponse(data.response);
+
+    } catch (error) {
+        document.getElementById(loadingId).remove();
+        console.error('AI Error:', error);
+        appendMessage('ai', 'Failed to get response from AI. Please try again.');
+    }
+}
+
+function appendMessage(sender, text, id = null) {
+    const chatHistory = document.getElementById('chatHistory');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = `chat-message ${sender}`;
+    if (id) messageDiv.id = id;
+
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'message-content';
+    contentDiv.textContent = text;
+
+    messageDiv.appendChild(contentDiv);
+    chatHistory.appendChild(messageDiv);
+
+    // Scroll to bottom
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+    
+    return messageDiv;
+}
+
+function renderAiResponse(response) {
+    const chatHistory = document.getElementById('chatHistory');
+    const messageDiv = document.createElement('div');
+    messageDiv.className = 'chat-message ai';
+
+    const contentDiv = document.createElement('div');
+    contentDiv.className = 'message-content';
+
+    if (typeof response === 'object') {
+        // Pretty print JSON if it's the structured format
+        let html = '';
+        
+        if (response.answers && response.answers.length > 0) {
+            html += `<p><strong>Analysis:</strong><br>${response.answers.join('<br>')}</p>`;
+        }
+        
+        if (response.insights && response.insights.length > 0) {
+            html += `<p style="margin-top:0.5rem;"><strong>Insights:</strong><ul>`;
+            response.insights.forEach(insight => html += `<li>${insight}</li>`);
+            html += `</ul></p>`;
+        }
+
+        if (response.recommendations && response.recommendations.length > 0) {
+            html += `<p style="margin-top:0.5rem;"><strong>Recommendations:</strong><ul>`;
+            response.recommendations.forEach(rec => html += `<li>${rec}</li>`);
+            html += `</ul></p>`;
+        }
+        
+        if (response.visualizations && response.visualizations.length > 0) {
+            html += `<p style="margin-top:0.5rem;"><strong>Visualizations:</strong></p>`;
+            response.visualizations.forEach((viz, index) => {
+                const chartId = `ai-chart-${Date.now()}-${index}`;
+                html += `<div id="${chartId}" class="ai-chart-item"></div>`;
+                
+                // We need to render after the element is in the DOM
+                setTimeout(() => {
+                    renderAiChart(viz, chartId);
+                }, 100);
+            });
+        }
+        
+        if (html === '') {
+            html = `<pre>${JSON.stringify(response, null, 2)}</pre>`;
+        }
+        
+        contentDiv.innerHTML = html;
+    } else {
+        contentDiv.textContent = response;
+    }
+
+    messageDiv.appendChild(contentDiv);
+    chatHistory.appendChild(messageDiv);
+
+    // Scroll to bottom
+    chatHistory.scrollTop = chatHistory.scrollHeight;
+}
+
+function renderAiChart(viz, elementId) {
+    const element = document.getElementById(elementId);
+    if (!element) return;
+
+    let data = [];
+    if (viz.type === 'pie') {
+        data = [{
+            type: 'pie',
+            labels: viz.labels,
+            values: viz.values,
+            hole: 0.4,
+            marker: {
+                colors: ['#6366f1', '#a855f7', '#ec4899', '#f59e0b', '#10b981']
+            }
+        }];
+    } else {
+        data = [{
+            type: viz.type || 'bar',
+            x: viz.labels,
+            y: viz.values,
+            marker: {
+                color: viz.type === 'bar' ? '#6366f1' : '#a855f7',
+                width: 0.7
+            },
+            line: {
+                color: '#6366f1',
+                width: 3,
+                shape: 'spline'
+            }
+        }];
+    }
+
+    const layout = {
+        title: {
+            text: viz.title || 'Data Visualization',
+            font: { color: '#ffffff', size: 16 }
+        },
+        paper_bgcolor: 'transparent',
+        plot_bgcolor: 'transparent',
+        showlegend: viz.type === 'pie',
+        legend: { font: { color: '#ffffff' } },
+        margin: { t: 50, b: 50, l: 50, r: 20 },
+        xaxis: {
+            gridcolor: 'rgba(255, 255, 255, 0.1)',
+            tickfont: { color: '#ffffff' }
+        },
+        yaxis: {
+            gridcolor: 'rgba(255, 255, 255, 0.1)',
+            tickfont: { color: '#ffffff' }
+        },
+        autosize: true
+    };
+
+    const config = {
+        responsive: true,
+        displayModeBar: false
+    };
+
+    Plotly.newPlot(elementId, data, layout, config);
+}
